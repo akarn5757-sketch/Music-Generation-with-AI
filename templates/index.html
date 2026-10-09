@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Music Generation Studio | CodeAlpha Task 3</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="brand">
+                <div class="logo-icon">🎵</div>
+                <div>
+                    <h1>AI Music Generation Studio</h1>
+                    <p class="subtitle">Deep Learning LSTM Symbolic Music Synthesis &bull; CodeAlpha AI Internship Task 3</p>
+                </div>
+            </div>
+            <div class="badge-status">
+                <span class="status-dot"></span>
+                <span id="model-status-text">Model Ready (PyTorch LSTM)</span>
+            </div>
+        </header>
+
+        <!-- Main Layout Grid -->
+        <div class="main-grid">
+            <!-- Left Panel: Controls & Generation -->
+            <div class="panel control-panel">
+                <div class="panel-header">
+                    <h2>🎛️ Composition Controls</h2>
+                    <span class="badge">Inference</span>
+                </div>
+
+                <div class="control-group">
+                    <label for="num-notes">
+                        Sequence Length: <span id="notes-val" class="highlight">100 notes</span>
+                    </label>
+                    <input type="range" id="num-notes" min="30" max="250" value="100" step="10">
+                    <div class="slider-labels">
+                        <span>Short (30)</span>
+                        <span>Medium (120)</span>
+                        <span>Long (250)</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label for="temperature">
+                        Creativity / Temperature: <span id="temp-val" class="highlight">0.8</span>
+                    </label>
+                    <input type="range" id="temperature" min="0.2" max="1.4" value="0.8" step="0.05">
+                    <div class="slider-labels">
+                        <span>Harmonic (0.2)</span>
+                        <span>Balanced (0.8)</span>
+                        <span>Experimental (1.4)</span>
+                    </div>
+                    <small class="hint">Lower temperatures follow strict harmonic rules; higher temperatures explore avant-garde variations.</small>
+                </div>
+
+                <div class="control-group">
+                    <label for="bpm-tempo">
+                        Tempo (BPM): <span id="bpm-val" class="highlight">110 BPM</span>
+                    </label>
+                    <input type="range" id="bpm-tempo" min="60" max="160" value="110" step="5">
+                    <div class="slider-labels">
+                        <span>Largo (60)</span>
+                        <span>Moderato (110)</span>
+                        <span>Allegro (160)</span>
+                    </div>
+                </div>
+
+                <button id="btn-generate" class="btn btn-primary">
+                    <span class="btn-icon">⚡</span> Generate New Music
+                </button>
+
+                <div id="gen-loading" class="loading-state hidden">
+                    <div class="spinner"></div>
+                    <p>Generating polyphonic sequence with LSTM & synthesizing audio...</p>
+                </div>
+            </div>
+
+            <!-- Right Panel: Audio Player & Visualization -->
+            <div class="panel player-panel">
+                <div class="panel-header">
+                    <h2>🎧 Studio Player & Visualization</h2>
+                    <span class="badge" id="player-status-badge">Awaiting Generation</span>
+                </div>
+
+                <div id="player-empty" class="empty-state">
+                    <div class="empty-icon">🎼</div>
+                    <h3>No Track Generated Yet</h3>
+                    <p>Adjust parameters and click <strong>"Generate New Music"</strong> to compose a piece using the trained neural network.</p>
+                </div>
+
+                <div id="player-active" class="active-player hidden">
+                    <div class="track-info">
+                        <h3 id="current-track-title">generated_composition.mid</h3>
+                        <p id="current-track-meta">100 Notes &bull; 110 BPM &bull; Acoustic Grand Piano</p>
+                    </div>
+
+                    <!-- Audio Player -->
+                    <div class="audio-box">
+                        <audio id="audio-element" controls preload="metadata"></audio>
+                    </div>
+
+                    <!-- Action Downloads -->
+                    <div class="action-buttons">
+                        <a id="btn-dl-midi" class="btn btn-outline" download>
+                            ⬇️ Download MIDI
+                        </a>
+                        <a id="btn-dl-wav" class="btn btn-outline" download>
+                            ⬇️ Download WAV Audio
+                        </a>
+                    </div>
+
+                    <!-- Piano Roll Display -->
+                    <div class="visualization-box">
+                        <h4>🎹 Symbolic Piano Roll Progression</h4>
+                        <div class="img-container">
+                            <img id="piano-roll-img" src="" alt="Piano Roll Visualization">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lower Section: Model Diagnostics & Dataset Info -->
+        <div class="secondary-grid">
+            <!-- Dataset & Architecture Stats -->
+            <div class="panel stats-panel">
+                <div class="panel-header">
+                    <h2>📊 Model Architecture & Training Stats</h2>
+                    <span class="badge">PyTorch</span>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="stat-vocab">123</div>
+                        <div class="stat-label">Unique Musical Tokens</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="stat-files">24</div>
+                        <div class="stat-label">MIDI Corpus Compositions</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">1,034,747</div>
+                        <div class="stat-label">Trainable Parameters</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="stat-loss">1.296</div>
+                        <div class="stat-label">Validation Cross-Entropy</div>
+                    </div>
+                </div>
+
+                <div class="loss-chart-box">
+                    <h4>📉 Training & Validation Convergence Curve</h4>
+                    <img id="loss-curve-img" src="/models/training_loss.png" alt="Training Loss Curve" onerror="this.style.display='none'">
+                </div>
+            </div>
+
+            <!-- Recent Compositions History -->
+            <div class="panel history-panel">
+                <div class="panel-header">
+                    <h2>📜 Generated Pieces History</h2>
+                    <button id="btn-refresh-history" class="btn-sm">🔄 Refresh</button>
+                </div>
+                <div class="history-list" id="history-container">
+                    <p class="text-muted">Loading composition history...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p><strong>CodeAlpha Artificial Intelligence Internship</strong> &bull; Task 3: Music Generation with AI</p>
+            <p>GitHub Repository: <code>CodeAlpha_Music_Generation_AI</code> &bull; Built with PyTorch, music21, and Flask</p>
+        </footer>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
+
