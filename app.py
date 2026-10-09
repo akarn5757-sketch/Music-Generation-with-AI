@@ -140,9 +140,9 @@ def serve_output(filename):
 def serve_models(filename):
     return send_from_directory("models", filename)
 
+import os
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    print(f"[*] Starting AI Music Generation Studio on http://127.0.0.1:{port}")
-    app.run(host="127.0.0.1", port=port, debug=False)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.', port=port)
 
